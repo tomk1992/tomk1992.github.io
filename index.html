@@ -3,11 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My First Calculator</title>
+  <title>ETF Growth Calculator – Germany</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f8f9fa;
+      color: #222;
+      line-height: 1.6;
+    }
+    h1 {
+      text-align: center;
+      color: #0070f3;
+    }
+    form {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.8rem;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #005ad6; }
+    .result {
+      max-width: 500px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .result p {
+      margin: 0.3rem 0;
+      font-size: 1rem;
+    }
+    canvas { margin-top: 2rem; }
+  </style>
 </head>
 <body>
-  <h1>Hello world 🌍</h1>
-  <p>This is my first web page hosted for free!</p>
-  <a href="etf-calculator.html">ETF Calculator</a>
+  <h1>ETF Growth Calculator (Germany)</h1>
+
+  <form id="calcForm">
+    <label>Initial investment (€)</label>
+    <input type="number" id="initial" value="10000">
+
+    <label>Monthly contribution (€)</label>
+    <input type="number" id="monthly" value="500">
+
+    <label>Investment duration (years)</label>
+    <input type="number" id="years" value="20">
+
+    <label>Expected annual return (%)</label>
+    <input type="number" id="returnRate" value="6">
+
+    <label>TER / Fees (%)</label>
+    <input type="number" id="fee" value="0.2">
+
+    <label>Tax rate (%)</label>
+    <input type="number" id="taxRate" value="26.375">
+
+    <label>Sparer-Pauschbetrag (€)</label>
+    <input type="number" id="allowance" value="1000">
+
+    <label>Inflation rate (%)</label>
+    <input type="number" id="inflation" value="2">
+
+    <button type="button" onclick="calculate()">Calculate</button>
+  </form>
+
+  <div class="result" id="result"></div>
+
+  <canvas id="chart" width="500" height="250"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    function calculate() {
+      const initial = parseFloat(document.getElementById('initial').value);
+      const monthly = parseFloat(document.getElementById('monthly').value);
+      const years = parseInt(document.getElementById('years').value);
+      const r = parseFloat(document.getElementById('returnRate').value) / 100;
+      const fee = parseFloat(document.getElementById('fee').value) / 100;
+      const taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
+      const allowance = parseFloat(document.getElementById('allowance').value);
+      const inflation = parseFloat(document.getElementById('inflation').value) / 100;
+
+      const netReturn = r - fee;
+      let value = initial;
+      let invested = initial;
+      let yearlyValues = [value];
+      for (let i = 1; i <= years; i++) {
+        value = (value + monthly * 12) * (1 + netReturn);
+        invested += monthly * 12;
+        yearlyValues.push(value);
+      }
+
+      const taxableGain = Math.max(0, value - invested - allowance);
+      const tax = taxableGain * taxRate;
+      const netValue = value - tax;
+      const CAGR = Math.pow(netValue / invested, 1 / years) - 1;
+      const realCAGR = (1 + CAGR) / (1 + inflation) - 1;
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `
+        <p><strong>Total Invested:</strong> €${invested.toFixed(0)}</p>
+        <p><strong>Portfolio Value (Gross):</strong> €${value.toFixed(0)}</p>
+        <p><strong>Tax Owed:</strong> €${tax.toFixed(0)}</p>
+        <p><strong>Portfolio Value (After Tax):</strong> €${netValue.toFixed(0)}</p>
+        <p><strong>Annualised Return (After Tax):</strong> ${(CAGR*100).toFixed(2)}%</p>
+        <p><strong>Real Return (After Inflation):</strong> ${(realCAGR*100).toFixed(2)}%</p>
+      `;
+
+      drawChart(yearlyValues, years);
+    }
+
+    let chartInstance = null;
+    function drawChart(values, years) {
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({length: years + 1}, (_, i) => i),
+          datasets: [{
+            label: 'Portfolio value (€)',
+            data: values,
+            borderColor: '#0070f3',
+            backgroundColor: 'rgba(0,112,243,0.1)',
+            fill: true,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Portfolio Growth Over Time' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Years' } },
+            y: { title: { display: true, text: 'Value (€)' } }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
