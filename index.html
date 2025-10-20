@@ -6,35 +6,38 @@
   <title>ETF Growth Calculator – Germany</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background-color: #f8f9fa;
+      font-family: system-ui, sans-serif;
+      background-color: #f7f8fa;
+      margin: 0;
+      padding: 0;
       color: #222;
-      line-height: 1.6;
     }
-    h1 {
+    header {
+      background: #0070f3;
+      color: white;
+      padding: 1rem 2rem;
       text-align: center;
-      color: #0070f3;
     }
-    form {
-      max-width: 500px;
+    main {
+      max-width: 600px;
       margin: 2rem auto;
-      padding: 1.5rem;
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
     label {
       display: block;
       margin-top: 1rem;
-      font-weight: bold;
+      font-weight: 600;
     }
-    input {
+    input, select {
       width: 100%;
       padding: 0.6rem;
       margin-top: 0.3rem;
       border: 1px solid #ccc;
       border-radius: 6px;
+      font-size: 1rem;
     }
     button {
       margin-top: 1.5rem;
@@ -45,27 +48,30 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-weight: 600;
     }
     button:hover { background: #005ad6; }
     .result {
-      max-width: 500px;
-      margin: 2rem auto;
-      background: white;
+      margin-top: 2rem;
+      background: #f9f9f9;
       padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
     }
-    .result p {
-      margin: 0.3rem 0;
-      font-size: 1rem;
-    }
+    .result p { margin: 0.3rem 0; }
     canvas { margin-top: 2rem; }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
-  <h1>ETF Growth Calculator (Germany)</h1>
-
-  <form id="calcForm">
+  <header>
+    <h1>ETF Growth Calculator (Germany)</h1>
+  </header>
+  <main>
     <label>Initial investment (€)</label>
     <input type="number" id="initial" value="10000">
 
@@ -76,29 +82,53 @@
     <input type="number" id="years" value="20">
 
     <label>Expected annual return (%)</label>
-    <input type="number" id="returnRate" value="6">
+    <input type="number" id="returnRate" value="6" step="0.1">
 
     <label>TER / Fees (%)</label>
-    <input type="number" id="fee" value="0.2">
+    <input type="number" id="fee" value="0.20" step="0.01">
 
     <label>Tax rate (%)</label>
-    <input type="number" id="taxRate" value="26.375">
+    <input type="number" id="taxRate" value="26.375" step="0.001">
 
-    <label>Sparer-Pauschbetrag (€)</label>
-    <input type="number" id="allowance" value="1000">
+    <label>Teilfreistellung (partial tax exemption)</label>
+    <select id="teilfreist">
+      <option value="0">0 % (Bond ETF)</option>
+      <option value="15">15 % (Mixed ETF)</option>
+      <option value="30" selected>30 % (Equity ETF)</option>
+    </select>
 
-    <label>Inflation rate (%)</label>
-    <input type="number" id="inflation" value="2">
+    <div class="toggle">
+      <input type="checkbox" id="useInflation" onchange="toggleInflation()">
+      <label for="useInflation">Adjust for inflation</label>
+    </div>
 
-    <button type="button" onclick="calculate()">Calculate</button>
-  </form>
+    <div id="inflationField" style="display:none;">
+      <label>Inflation rate (%)</label>
+      <input type="number" id="inflation" value="2" step="0.1">
+    </div>
 
-  <div class="result" id="result"></div>
+    <button onclick="calculate()">Calculate</button>
 
-  <canvas id="chart" width="500" height="250"></canvas>
+    <div class="result" id="result"></div>
+
+    <canvas id="chart" width="500" height="250"></canvas>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    function formatNumber(num) {
+      return num.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+    }
+
+    function formatPercent(num, decimals = 1) {
+      return num.toLocaleString("de-DE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + " %";
+    }
+
+    function toggleInflation() {
+      document.getElementById("inflationField").style.display =
+        document.getElementById("useInflation").checked ? "block" : "none";
+    }
+
     function calculate() {
       const initial = parseFloat(document.getElementById('initial').value);
       const monthly = parseFloat(document.getElementById('monthly').value);
@@ -106,33 +136,37 @@
       const r = parseFloat(document.getElementById('returnRate').value) / 100;
       const fee = parseFloat(document.getElementById('fee').value) / 100;
       const taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
-      const allowance = parseFloat(document.getElementById('allowance').value);
-      const inflation = parseFloat(document.getElementById('inflation').value) / 100;
+      const teilfreist = parseFloat(document.getElementById('teilfreist').value) / 100;
+      const useInflation = document.getElementById('useInflation').checked;
+      const inflation = useInflation ? parseFloat(document.getElementById('inflation').value) / 100 : 0;
 
       const netReturn = r - fee;
       let value = initial;
       let invested = initial;
       let yearlyValues = [value];
+
       for (let i = 1; i <= years; i++) {
         value = (value + monthly * 12) * (1 + netReturn);
         invested += monthly * 12;
         yearlyValues.push(value);
       }
 
-      const taxableGain = Math.max(0, value - invested - allowance);
+      const grossGain = value - invested;
+      const taxableGain = grossGain * (1 - teilfreist);
       const tax = taxableGain * taxRate;
       const netValue = value - tax;
       const CAGR = Math.pow(netValue / invested, 1 / years) - 1;
-      const realCAGR = (1 + CAGR) / (1 + inflation) - 1;
+      const realCAGR = useInflation ? (1 + CAGR) / (1 + inflation) - 1 : null;
 
       const resultDiv = document.getElementById('result');
       resultDiv.innerHTML = `
-        <p><strong>Total Invested:</strong> €${invested.toFixed(0)}</p>
-        <p><strong>Portfolio Value (Gross):</strong> €${value.toFixed(0)}</p>
-        <p><strong>Tax Owed:</strong> €${tax.toFixed(0)}</p>
-        <p><strong>Portfolio Value (After Tax):</strong> €${netValue.toFixed(0)}</p>
-        <p><strong>Annualised Return (After Tax):</strong> ${(CAGR*100).toFixed(2)}%</p>
-        <p><strong>Real Return (After Inflation):</strong> ${(realCAGR*100).toFixed(2)}%</p>
+        <p><strong>Total invested:</strong> €${formatNumber(invested)}</p>
+        <p><strong>Portfolio value (gross):</strong> €${formatNumber(value)}</p>
+        <p><strong>Gross gain:</strong> €${formatNumber(grossGain)}</p>
+        <p><strong>Taxes after Teilfreistellung:</strong> €${formatNumber(tax)}</p>
+        <p><strong>Portfolio value (after tax):</strong> €${formatNumber(netValue)}</p>
+        <p><strong>Annualised return (after tax):</strong> ${formatPercent(CAGR*100,1)}</p>
+        ${useInflation ? `<p><strong>Real annual return (after inflation):</strong> ${formatPercent(realCAGR*100,1)}</p>` : ""}
       `;
 
       drawChart(yearlyValues, years);
@@ -159,7 +193,7 @@
           responsive: true,
           plugins: {
             legend: { position: 'bottom' },
-            title: { display: true, text: 'Portfolio Growth Over Time' }
+            title: { display: true, text: 'Portfolio growth over time' }
           },
           scales: {
             x: { title: { display: true, text: 'Years' } },
