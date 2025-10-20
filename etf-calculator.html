@@ -1,1 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETF-Rechner – Deutschland</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: #f7f8fa;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    header {
+      background: #0070f3;
+      color: white;
+      padding: 1rem 2rem;
+      text-align: center;
+    }
+    main {
+      max-width: 600px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.8rem;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover { background: #005ad6; }
+    .result {
+      margin-top: 2rem;
+      background: #f9f9f9;
+      padding: 1.5rem;
+      border-radius: 8px;
+    }
+    .result p { margin: 0.3rem 0; }
+    canvas { margin-top: 2rem; }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ETF-Wachstumsrechner (Deutschland)</h1>
+  </header>
+  <main>
+    <label>Startkapital (€)</label>
+    <input type="number" id="initial" value="10000">
+
+    <label>Monatliche Einzahlung (€)</label>
+    <input type="number" id="monthly" value="500">
+
+    <label>Anlagedauer (Jahre)</label>
+    <input type="number" id="years" value="20">
+
+    <label>Erwartete jährliche Rendite (%)</label>
+    <input type="number" id="returnRate" value="6" step="0.1">
+
+    <label>TER / Kosten (%)</label>
+    <input type="number" id="fee" value="0.20" step="0.01">
+
+    <label>Steuersatz (%)</label>
+    <input type="number" id="taxRate" value="26.375" step="0.001">
+
+    <label>Teilfreistellung (%)</label>
+    <select id="teilfreist">
+      <option value="0">0 % (Anleihen-ETF)</option>
+      <option value="15">15 % (Misch-ETF)</option>
+      <option value="30" selected>30 % (Aktien-ETF)</option>
+    </select>
+
+    <div class="toggle">
+      <input type="checkbox" id="useInflation" onchange="toggleInflation()">
+      <label for="useInflation">Inflation berücksichtigen</label>
+    </div>
+
+    <div id="inflationField" style="display:none;">
+      <label>Inflationsrate (%)</label>
+      <input type="number" id="inflation" value="2" step="0.1">
+    </div>
+
+    <button onclick="calculate()">Berechnen</button>
+
+    <div class="result" id="result"></div>
+
+    <canvas id="chart" width="500" height="250"></canvas>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    function formatNumber(num) {
+      return num.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+    }
+
+    function formatPercent(num, decimals = 1) {
+      return num.toLocaleString("de-DE", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + " %";
+    }
+
+    function toggleInflation() {
+      document.getElementById("inflationField").style.display =
+        document.getElementById("useInflation").checked ? "block" : "none";
+    }
+
+    function calculate() {
+      const initial = parseFloat(document.getElementById('initial').value);
+      const monthly = parseFloat(document.getElementById('monthly').value);
+      const years = parseInt(document.getElementById('years').value);
+      const r = parseFloat(document.getElementById('returnRate').value) / 100;
+      const fee = parseFloat(document.getElementById('fee').value) / 100;
+      const taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
+      const teilfreist = parseFloat(document.getElementById('teilfreist').value) / 100;
+      const useInflation = document.getElementById('useInflation').checked;
+      const inflation = useInflation ? parseFloat(document.getElementById('inflation').value) / 100 : 0;
+
+      const netReturn = r - fee;
+      let value = initial;
+      let invested = initial;
+      let yearlyValues = [value];
+
+      for (let i = 1; i <= years; i++) {
+        value = (value + monthly * 12) * (1 + netReturn);
+        invested += monthly * 12;
+        yearlyValues.push(value);
+      }
+
+      const grossGain = value - invested;
+      const taxableGain = grossGain * (1 - teilfreist);
+      const tax = taxableGain * taxRate;
+      const netValue = value - tax;
+      const CAGR = Math.pow(netValue / invested, 1 / years) - 1;
+      const realCAGR = useInflation ? (1 + CAGR) / (1 + inflation) - 1 : null;
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = `
+        <p><strong>Investiertes Kapital:</strong> €${formatNumber(invested)}</p>
+        <p><strong>Bruttowert:</strong> €${formatNumber(value)}</p>
+        <p><strong>Bruttogewinn:</strong> €${formatNumber(grossGain)}</p>
+        <p><strong>Steuer (nach Teilfreistellung):</strong> €${formatNumber(tax)}</p>
+        <p><strong>Endwert nach Steuern:</strong> €${formatNumber(netValue)}</p>
+        <p><strong>Jährliche Rendite nach Steuern:</strong> ${formatPercent(CAGR*100,1)}</p>
+        ${useInflation ? `<p><strong>Reale Rendite (nach Inflation):</strong> ${formatPercent(realCAGR*100,1)}</p>` : ""}
+      `;
+
+      drawChart(yearlyValues, years);
+    }
+
+    let chartInstance = null;
+    function drawChart(values, years) {
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({length: years + 1}, (_, i) => i),
+          datasets: [{
+            label: 'Portfolio-Wert (€)',
+            data: values,
+            borderColor: '#0070f3',
+            backgroundColor: 'rgba(0,112,243,0.1)',
+            fill: true,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Portfolioentwicklung über die Jahre' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Jahre' } },
+            y: { title: { display: true, text: 'Wert (€)' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
 
