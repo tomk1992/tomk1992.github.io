@@ -148,3 +148,14 @@ function drawChart(values, years) {
     },
   });
 }
+
+/* === Increment/Decrement for "Investment duration" === */
+function changeYears(step) {
+  const input = document.getElementById("years");
+  let value = parseGermanNumber(input.value);
+  if (isNaN(value)) value = 0;
+  value += step;
+  if (value < 1) value = 1; // minimum 1 year
+  input.value = value.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+}
+
