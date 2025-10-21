@@ -5,6 +5,37 @@
    Core logic for ETF growth, German-style tax & inflation handling
    ========================================================== */
 
+// Input Formatting – German style (1.000,00)
+
+document.addEventListener("DOMContentLoaded", () => {
+  // For each input with data-format attribute
+  document.querySelectorAll("input[data-format]").forEach(input => {
+    // Format on blur (when user leaves the field)
+    input.addEventListener("blur", () => {
+      const raw = input.value;
+      const num = parseGermanNumber(raw);
+      if (!isNaN(num)) {
+        // Format visually based on type
+        if (input.dataset.format === "integer") {
+          input.value = num.toLocaleString("de-DE", { maximumFractionDigits: 0 });
+        } else if (input.dataset.format === "currency") {
+          input.value = num.toLocaleString("de-DE", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        } else if (input.dataset.format === "percent") {
+          input.value = num.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 3 });
+        }
+      }
+    });
+  });
+});
+
+// Helper to parse German numbers like "10.000,25" → 10000.25
+function parseGermanNumber(str) {
+  if (typeof str !== "string") return NaN;
+  str = str.replace(/\./g, "").replace(",", ".");
+  return parseFloat(str);
+}
+
+
 // ---- Number Formatting Helpers ----
 function formatNumber(num) {
   return num.toLocaleString("de-DE", { maximumFractionDigits: 0 });
@@ -25,17 +56,17 @@ function toggleInflation() {
 
 // ---- Main Calculation ----
 function calculate() {
-  // --- Input Values ---
-  const initial = parseFloat(document.getElementById("initial").value);
-  const monthly = parseFloat(document.getElementById("monthly").value);
-  const years = parseInt(document.getElementById("years").value);
-  const r = parseFloat(document.getElementById("returnRate").value) / 100;
-  const fee = parseFloat(document.getElementById("fee").value) / 100;
-  const taxRate = parseFloat(document.getElementById("taxRate").value) / 100;
-  const teilfreist = parseFloat(document.getElementById("teilfreist").value) / 100;
-  const useInflation = document.getElementById("useInflation").checked;
-  const inflation = useInflation
-    ? parseFloat(document.getElementById("inflation").value) / 100
+   // --- Input Values ---
+   const initial = parseGermanNumber(document.getElementById("initial").value);
+   const monthly = parseGermanNumber(document.getElementById("monthly").value);
+   const years = parseGermanNumber(document.getElementById("years").value);
+   const r = parseGermanNumber(document.getElementById("returnRate").value) / 100;
+   const fee = parseGermanNumber(document.getElementById("fee").value) / 100;
+   const taxRate = parseGermanNumber(document.getElementById("taxRate").value) / 100;
+   const teilfreist = parseFloat(document.getElementById("teilfreist").value) / 100;
+   const useInflation = document.getElementById("useInflation").checked;
+   const inflation = useInflation
+       ? parseFloat(document.getElementById("inflation").value) / 100
     : 0;
 
   // --- Compounding ---
