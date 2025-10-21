@@ -18,22 +18,22 @@
 
   <main>
     <label>Initial investment (€)</label>
-    <input type="number" id="initial" value="10000">
-
+    <input type="text" id="initial" value="10.000" data-format="currency">
+    
     <label>Monthly contribution (€)</label>
-    <input type="number" id="monthly" value="500">
-
+    <input type="text" id="monthly" value="500" data-format="currency">
+    
     <label>Investment duration (years)</label>
-    <input type="number" id="years" value="20">
-
+    <input type="text" id="years" value="20" data-format="integer">
+    
     <label>Expected annual return (%)</label>
-    <input type="number" id="returnRate" value="6" step="0.1">
-
+    <input type="text" id="returnRate" value="6,0" data-format="percent">
+    
     <label>TER / Fees (%)</label>
-    <input type="number" id="fee" value="0.20" step="0.01">
-
+    <input type="text" id="fee" value="0,20" data-format="percent">
+    
     <label>Tax rate (%)</label>
-    <input type="number" id="taxRate" value="26.375" step="0.001">
+    <input type="text" id="taxRate" value="26,375" data-format="percent">
 
     <label>Teilfreistellung (partial tax exemption)</label>
     <select id="teilfreist">
