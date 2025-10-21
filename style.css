@@ -123,3 +123,39 @@ button:hover {
     padding: 1.2rem;
   }
 }
+
+/* === Increment/Decrement Buttons === */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.input-group input {
+  text-align: center;
+  flex: 1;
+}
+
+.step-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: none;
+  background: #e9eff5;
+  color: #0070f3;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.step-btn:hover {
+  background: #d7e7ff;
+  transform: translateY(-1px);
+}
+
+.step-btn:active {
+  transform: scale(0.96);
+}
+
