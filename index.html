@@ -17,21 +17,35 @@
   </header>
 
   <main>
+
+  <!-- ===== Card 1: Investment details ===== -->
+  <section class="card">
+    <h2>Investment Details</h2>
+
     <label>Initial investment (€)</label>
     <input type="text" id="initial" value="10.000" data-format="currency">
-    
+
     <label>Monthly contribution (€)</label>
     <input type="text" id="monthly" value="500" data-format="currency">
-    
+
     <label>Investment duration (years)</label>
-    <input type="text" id="years" value="20" data-format="integer">
-    
+    <div class="input-group">
+      <button type="button" class="step-btn" onclick="changeYears(-1)">−</button>
+      <input type="text" id="years" value="20" data-format="integer" readonly>
+      <button type="button" class="step-btn" onclick="changeYears(1)">+</button>
+    </div>
+  </section>
+
+  <!-- ===== Card 2: Returns & Taxes ===== -->
+  <section class="card">
+    <h2>Returns & Taxes</h2>
+
     <label>Expected annual return (%)</label>
     <input type="text" id="returnRate" value="6,0" data-format="percent">
-    
+
     <label>TER / Fees (%)</label>
     <input type="text" id="fee" value="0,20" data-format="percent">
-    
+
     <label>Tax rate (%)</label>
     <input type="text" id="taxRate" value="26,375" data-format="percent">
 
@@ -41,6 +55,11 @@
       <option value="15">15 % (Mixed ETF)</option>
       <option value="30" selected>30 % (Equity ETF)</option>
     </select>
+  </section>
+
+  <!-- ===== Card 3: Adjustments ===== -->
+  <section class="card">
+    <h2>Adjustments</h2>
 
     <div class="toggle">
       <input type="checkbox" id="useInflation" onchange="toggleInflation()">
@@ -49,15 +68,21 @@
 
     <div id="inflationField" style="display:none;">
       <label>Inflation rate (%)</label>
-      <input type="number" id="inflation" value="2" step="0.1">
+      <input type="text" id="inflation" value="2,0" data-format="percent">
     </div>
+  </section>
+
+  <!-- ===== Card 4: Results ===== -->
+  <section class="card highlight">
+    <h2>Results</h2>
 
     <button onclick="calculate()">Calculate</button>
-
     <div class="result" id="result"></div>
-
     <canvas id="chart" width="500" height="250"></canvas>
-  </main>
+  </section>
+
+</main>
+
 
   <!-- Your script (must be last) -->
   <script src="script.js"></script>
