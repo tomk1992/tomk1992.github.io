@@ -1,0 +1,112 @@
+/* ===== Global Styles ===== */
+:root {
+  --primary: #0070f3;
+  --primary-dark: #005ad6;
+  --bg: #f7f8fa;
+  --text: #222;
+  --card-bg: #fff;
+  --radius: 12px;
+  --shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg);
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ===== Header ===== */
+header {
+  background: var(--primary);
+  color: white;
+  padding: 1rem 2rem;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+/* ===== Main Content ===== */
+main {
+  max-width: 600px;
+  margin: 2rem auto;
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+h2, h3 {
+  color: var(--primary);
+}
+
+/* ===== Form ===== */
+label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+input, select {
+  width: 100%;
+  padding: 0.6rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+}
+
+button {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+button:hover {
+  background: var(--primary-dark);
+}
+
+/* ===== Result Box ===== */
+.result {
+  margin-top: 2rem;
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.result p {
+  margin: 0.3rem 0;
+  font-size: 1rem;
+}
+
+/* ===== Chart ===== */
+canvas {
+  margin-top: 2rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  main {
+    margin: 1rem;
+    padding: 1.2rem;
+  }
+  header h1 {
+    font-size: 1.4rem;
+  }
+  button {
+    font-size: 0.95rem;
+  }
+}
